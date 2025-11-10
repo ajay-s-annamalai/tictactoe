@@ -2,64 +2,135 @@ import { useState } from "react";
 import "./App.css";
 
 export default function App() {
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [isXNext, setIsXNext] = useState(true);
+const [boardOfBoard, setBoardofBoard] = useState(() => Array(9).fill(null));
+const [board, setBoard] = useState(() =>
+  Array(9).fill(null).map(() =>
+    Array(9).fill(null)
+  )
+);
+const [turn, setTurn] = useState("x");
+const [validSquare, setValidSquare] = useState(4);
+const [wonSquares, setWonSquares] = useState(Array(9).fill(null));
 
-  const winner = calculateWinner(squares);
+function clickButton(i, j) {
+  //console.log("valid clicks ",validSquare, " ", wonSquares[i], " ", i )
+  console.log("wonSquares ", wonSquares[i])
+  if((validSquare == i || wonSquares[validSquare] !== null) && board[i][j] == null){
 
-  function handleClick(i) {
-    if (squares[i] || winner) return;
-    const nextSquares = squares.slice();
-    nextSquares[i] = isXNext ? "X" : "O";
-    setSquares(nextSquares);
-    setIsXNext(!isXNext);
+
+    setBoard(prevBoard => {
+      const newBoard = [...prevBoard];
+      newBoard[i][j] = turn
+      setTurn(turn === "x" ? "o" : "x");
+      
+      setValidSquare(j);
+      if(winnerOfBoard(i) !== null){
+        setWonSquares(prevWonSquares => {
+          const newWonSquares = [...prevWonSquares];
+          newWonSquares[i] = winnerOfBoard(i);
+          return newWonSquares;
+        }
+        )}
+        
+      return newBoard;
+    });
   }
-
-  function calculateWinner(squares) {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8],      // rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8],      // columns
-      [0, 4, 8], [2, 4, 6],                 // diagonals
-    ];
-    for (const [a, b, c] of lines) {
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
-      }
+}
+function winnerOfBoard(index) {
+  
+  const newBoard = board[index];
+  if(newBoard == null){
+    return null
+  }
+    
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (const[a,b,c] of lines){
+    
+    if(newBoard[a]!== null && newBoard[a] === newBoard[b] && newBoard[a] === newBoard[c]){
+      
+      return newBoard[a];
     }
-    return null;
   }
-
-  function restart() {
-    setSquares(Array(9).fill(null));
-    setIsXNext(true);
+  return null; 
+}; 
+function winnerOfBoardOfBoards() {
+  
+    
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (const[a,b,c] of lines){
+    if(wonSquares[a]!== null && wonSquares[a] === wonSquares[b] && wonSquares[a] === wonSquares[c]){
+      return wonSquares[a];
+    }
   }
+  return null;
+} 
 
-  return (
-    <div className="container">
-      <h1 className="title">Tic-Tac-Toe</h1>
-      <p className="status">
-        {winner
-          ? `🎉 Winner: ${winner}`
-          : squares.every(Boolean)
-          ? "It's a Draw!"
-          : `Next Player: ${isXNext ? "X" : "O"}`}
-      </p>
-
-      <div className="board">
-        {squares.map((sq, i) => (
-          <button key={i}
-            className={`square ${sq ? "filled" : ""}`}
-            onClick={() => handleClick(i)}
-            
-          >
-            {sq}
-          </button>
-        ))}
-      </div>
-
-      <button onClick={restart} className="restart-btn"> 🔄 Restart </button>
-    </div>
-  );
+function restart(){
+  setBoardofBoard(Array(9).fill(null));
+  setBoard(Array(9).fill(null).map(() =>
+    Array(9).fill(null)
+  ));
+  setTurn("x");
+  setValidSquare(4);
+  setWonSquares(Array(9).fill(null));
 }
 
 
+return (
+  <div>
+    <h1 className = "title"> 🎮 Tic Tac Toe 🎮 </h1>
+    <div className="container">
+      {winnerOfBoardOfBoards() === null ? (
+        <div className="boardOfBoards">
+          {boardOfBoard.map((boardStatus, i) => (
+            winnerOfBoard(i) == null ? (
+              <div key={i} className="board">
+                {board[i].map((cell, j) => (
+                  <button
+                    key={j}
+                    className="cell"
+                    onClick={() => clickButton(i, j)}
+                  >
+                    {cell}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div key={i} className="boardWon">
+                {winnerOfBoard(i)}
+              </div>
+            )
+          ))}
+        </div>
+      ) : (
+        <div className="gameWon">
+          <h1>🏆 Game Over!</h1>
+          <h2>Winner: {winnerOfBoardOfBoards().toUpperCase()}</h2>
+        </div>
+      )}
+      <div>
+        <button className="restart-btn" onClick={restart}>Restart</button>
+      </div>
+    </div>
+  </div>
+);
+
+}
